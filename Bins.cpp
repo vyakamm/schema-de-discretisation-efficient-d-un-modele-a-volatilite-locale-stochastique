@@ -69,11 +69,10 @@ equal_number::equal_number(const int& number_of_simulations, const int& number_o
 vector<double> equal_number::bins_creation_manner(const vector<double>& spot) const
 {
 	vector<double> bin;
-	bin.push_back(spot[0]);
+	bin.push_back(0);
 	bin.push_back(spot[1]);
-	for (size_t i = 1; i <_number_of_bins; i++)
+	for (size_t i = 1; i <=_number_of_bins; i++)
 		bin.push_back(spot[i * _number_of_simulations / _number_of_bins - 1]);
-	bin.push_back(spot[spot.size()-1]);
 	return bin;
 }
 
