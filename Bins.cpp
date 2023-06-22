@@ -28,7 +28,6 @@ double bins::expectation(vector< pair<double,double> >& _spot_function_variance,
 	_spot_function_variance.push_back({ 0,0 });
 
 	//Compute the expectation
-	std::sort(_spot_function_variance.begin(), _spot_function_variance.end());
 	vector<pair<double,double>>::iterator it2 = std::find_if(_spot_function_variance.begin(), _spot_function_variance.end(),
 		[bound_2](const std::pair<double, double>& element) { return element.first == bound_2; });
 	vector<pair<double, double>>::iterator it1 = std::find_if(_spot_function_variance.begin(), _spot_function_variance.end(),
