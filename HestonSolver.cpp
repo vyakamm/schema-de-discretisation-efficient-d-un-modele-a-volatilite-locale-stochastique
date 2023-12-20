@@ -17,7 +17,7 @@ double HestonSolver(const double& tau, const double& kappa, const double& theta,
     double aa = theta * kappa * tau / pow(vol_of_vol, 2);
     double bb = -2 * theta * kappa / pow(vol_of_vol, 2);
     double du = static_cast<double>(N_max) / N;
-    complex<double> I(0, 1), P(0, 0), u1(0, 0), kap(kappa, 0), lamb2(vol_of_vol * vol_of_vol, 0), un(1, 0), t(-tau, 0), con(log(init_spot / strike) + risk_free_rate * tau, 0),
+    complex<double> I(0, 1), P(0, 0), kap(kappa, 0), lamb2(vol_of_vol * vol_of_vol, 0), un(1, 0), t(-tau, 0), con(log(init_spot / strike) + risk_free_rate * tau, 0),
         v0(init_variance, 0), a(theta * kappa * tau / pow(vol_of_vol, 2), 0), d(du, 0), deux(2, 0), con1(init_spot / strike - exp(-risk_free_rate * tau)), pi(3.14, 0), rho_vol(rho * vol_of_vol, 0);
     
     for (i = 1; i < N; ++i)
