@@ -34,27 +34,27 @@ Pair PathSimulator::path_maturity()
 	size_t number_of_simulations = model->get_bin()->number_of_simulations();
 	Pair spot_variance = model->init_spot_variance();
 	vector<Pair> samples(number_of_simulations, spot_variance);
-	vector<Pair> v;
+	vector<Pair> v(number_of_simulations);
 	size_t k{};
-	for (size_t i = 1; i < _time_points.size(); i++)
+
+	for (size_t i = 1; i < _time_points.size(); ++i)
 	{
 		v = samples;
 
-		for (size_t j = 0; j < number_of_simulations && i != _time_points.size() - 1; j++)
+		if (i < _time_points.size() - 1)
 		{
-			samples[j] = next_step(i, spot_variance, v);
-			//cout << "first = " << samples[j].first << " second = " << samples[j].second << "\n"; contrôle
-		}
-		for (k = 0; k < number_of_simulations && samples[k].second == 0 && i != _time_points.size() - 1; k++);
-		spot_variance = samples[k]; 
-		if (i == _time_points.size() - 1)
-		{
-			//cout << spot_variance.first << "\n";contrôle
-			spot_variance = next_step(i, spot_variance, v);
-			//cout << "first = " << spot_variance.first << " second = " << spot_variance.second << "\n";contrôle
-		}
+			for (size_t j = 0; j < number_of_simulations; ++j)
+			{
+				samples[j] = next_step(i, spot_variance, v);
+			}
 
+			for (k = 0; k < number_of_simulations && samples[k].second == 0; ++k);
+			spot_variance = samples[k];
+		}
+		else
+			spot_variance = next_step(i, spot_variance, v);
 	}
+
 	return spot_variance;
 }
 
@@ -103,9 +103,7 @@ Pair PathSimulatorEuler::next_step(const size_t& time_idx, const Pair& spot_vari
 	}
 
 	// Applying psi function to variance's sample
-	for (size_t i = 0; i < spot_variance_sample.size(); i++)
-		spot_variance_sample[i].second = pow(model->psi_function(spot_variance_sample[i].second), 2);
-
+	transform(spot_variance_sample.begin(), spot_variance_sample.end(), spot_variance_sample.begin(), [this](Pair& x) {x.second = pow(model->psi_function(x.second), 2); return x; });
 
 	next1 = spot_variance.first + model->risk_free_rate() * delta_t * spot_variance.first + sqrt(model->local_volatility(_time_points[time_idx - 1], spot_variance_sample, spot_variance.first)) * spot_variance.first * model->psi_function(max(spot_variance.second, 0.0)) * sqrt(delta_t) * z1;
 	return Pair(max(next1, 10e-100), next2);
@@ -169,8 +167,9 @@ Pair PathSimulatorQE::next_step(const size_t& time_idx, const Pair& spot_varianc
 		double next1 = exp(next_log_spot);
 		return Pair(next1, next2);
 	}
+
 	// Applying psi function to the variance samples
-	std::transform(spot_variance_sample.begin(), spot_variance_sample.end(), spot_variance_sample.begin(), [](Pair x) { return std::pow(x.second, 2.0); });
+	transform(spot_variance_sample.begin(),spot_variance_sample.end(),spot_variance_sample.begin(),[this](Pair &x) {x.second = pow(model->psi_function(x.second),2);return x;});
 
 	double r1 = sqrt(model->local_volatility(_time_points[time_idx - 1], spot_variance_sample, spot_variance.first)) * (next2 - model->kappa() * model->theta() * delta_t + spot_variance.second * c1);
 	double r2 = sqrt(model->local_volatility(_time_points[time_idx - 1], spot_variance_sample, spot_variance.first) * spot_variance.second * delta_t);

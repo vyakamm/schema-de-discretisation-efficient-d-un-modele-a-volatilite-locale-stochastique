@@ -2,57 +2,55 @@
 #include<vector>
 #include <iostream>
 #include <algorithm>
+#include <numeric>
+
 
 // abstract class bins's constructor with arguments
 bins::bins(const size_t& number_of_simulations, const size_t& number_of_bins) :_number_of_simulations(number_of_simulations), _number_of_bins(number_of_bins)
 {
 }
 
-double bins::expectation(vector< pair<double, double> >& _spot_function_variance, const double& spot) const
+double bins::expectation(const vector< pair<double, double> >& _spot_function_variance, const double& spot) const
 {
-	std::vector<double> sorted_spot;
+    // Vector of Indexes
+    std::vector<size_t> indices(_spot_function_variance.size());
+    std::iota(indices.begin(), indices.end(), 0);
 
-	// Sorting the spot samples
-	std::sort(_spot_function_variance.begin(), _spot_function_variance.end());
+    // Sorting using Indexes
+    std::sort(indices.begin(), indices.end(),
+        [&_spot_function_variance](size_t a, size_t b) {
+            return _spot_function_variance[a].first <= _spot_function_variance[b].first;
+        });
 
-	for (size_t i = 0; i < _spot_function_variance.size(); i++)
-		sorted_spot.push_back(_spot_function_variance[i].first);
+    // Creating a vector containing the sorted values of the stock in order to compute bins bounds
+    std::vector<double> sorted_spot;
+    for (size_t i : indices) {
+        sorted_spot.push_back(_spot_function_variance[i].first);
+    }
 
-	// Assuming bins_creation_manner is a valid function
-	sorted_spot = bins_creation_manner(sorted_spot);
+    // Computing bins bounds
+    sorted_spot = bins_creation_manner(sorted_spot);
 
-	double sum = 0;
-	double number_of_samples = 0;
-	std::vector<double>::iterator l;
+    double sum = 0;
+    double number_of_samples = 0;
 
-	// find the bounds
-	l = std::lower_bound(sorted_spot.begin(), sorted_spot.end(), spot);
+    // Find Bounds
+    auto l = std::lower_bound(sorted_spot.begin(), sorted_spot.end(), spot);
+    size_t index = std::distance(sorted_spot.begin(), l);
+    double bound_2 = sorted_spot[index];
+    double bound_1 = sorted_spot[(index > 0) ? (index - 1) : 0];
 
-	// Check if l is a valid iterator
-	if (l == sorted_spot.begin()) {
-		std::cerr << "Spot is below the minimum value in the data." << std::endl;
-		return 0.0; // or handle this case appropriately
-	}
+    // Compute the expectation
+    for (size_t i = 0; i < _spot_function_variance.size(); ++i)
+    {
+        if (_spot_function_variance[i].first > bound_1 && _spot_function_variance[i].first <= bound_2)
+        {
+            sum += _spot_function_variance[i].second;
+            ++number_of_samples;
+        }
+    }
 
-	double bound_2 = *l;
-	double bound_1 = *(l - 1);
-	_spot_function_variance.push_back({ 0,0 });
-	std::sort(_spot_function_variance.begin(), _spot_function_variance.end());
-
-	// Compute the expectation
-	auto it2 = std::find_if(_spot_function_variance.begin(), _spot_function_variance.end(),
-		[bound_2](const std::pair<double, double>& element) { return element.first == bound_2; });
-
-	auto it1 = std::find_if(_spot_function_variance.begin(), _spot_function_variance.end(),
-		[bound_1](const std::pair<double, double>& element) { return element.first == bound_1; });
-
-	for (size_t i = it1 - _spot_function_variance.begin() + 1; i <= it2 - _spot_function_variance.begin(); i++) {
-		sum += _spot_function_variance[i].second;
-		number_of_samples++;
-	}
-
-	return ((1.0 / (_number_of_simulations * (number_of_samples / _number_of_simulations))) * sum);
-
+    return ((1.0 / (_number_of_simulations * (number_of_samples / _number_of_simulations))) * sum);
 }
 
 // Getter method
@@ -102,21 +100,3 @@ equal_number* equal_number::clone() const
 {
 	return new equal_number(*this);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

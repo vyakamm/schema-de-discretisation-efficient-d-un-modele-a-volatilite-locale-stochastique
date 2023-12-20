@@ -24,7 +24,7 @@ public:
 	// Enables the object to makes copies of it's own
 	virtual bins* clone() const = 0;
 	//Computes the conditional expectation according to the bin to which the simulated spot value belongs
-	double expectation(vector< pair<double, double> >& _spot_function_variance, const double &spot) const;
+	double expectation(const vector< pair<double, double> >& _spot_function_variance, const double &spot) const;
 	// Getter 
 	size_t number_of_simulations();
 };
